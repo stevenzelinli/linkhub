@@ -1,8 +1,6 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
-import ClientHandler.ClientHandler;
-import MessageHub.MessageHub;
 
 // Server class
 public class Server 
@@ -31,13 +29,13 @@ public class Server
             try
             {
                 socket = server_socket.accept();
+                System.out.println("New client request received : " + socket);
             }
             catch (IOException e)
             {
                 System.out.println("Connection Failed: " + e);
+                continue; // drop connection
             }
- 
-            System.out.println("New client request received : " + socket);
              
              
             System.out.println("Creating a new handler for this client...");
@@ -45,10 +43,8 @@ public class Server
             BufferedInputStream dataIS = new BufferedInputStream(socket.getInputStream());
             BufferedOutputStream dataOS = new BufferedOutputStream(socket.getOutputStream());
             
-            Map<String, MessageHub> map = new Map<String, MessageHub>();
-            
             // Create a new handler object for handling this request.
-            ClientHandler clientHandler = new ClientHandler(socket, map, dataIS, dataOS);
+            ClientHandler clientHandler = new ClientHandler(socket, messageHubs, dataIS, dataOS);
  
             // Create a new Thread with this object.
             Thread clientThread = new Thread(clientHandler);
@@ -60,9 +56,6 @@ public class Server
  
             // start the thread.
             clientThread.start();
-            
-           
- 
         }
     }
 }

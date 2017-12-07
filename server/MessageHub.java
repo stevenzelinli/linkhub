@@ -1,6 +1,6 @@
+import java.io.IOException;
 import java.util.*;
 import java.lang.StringBuilder;
-import ClientHandler;
 
 public class MessageHub
 {
@@ -8,8 +8,9 @@ public class MessageHub
     private Vector<String> messageList;
     private Integer numOfUsers;
     private Integer userIdentifierCount;
+    private String hubID;
         
-    public MessageBoard(const String hubID, ClientHandler creator){
+    public MessageHub(String hubID, ClientHandler creator){
         numOfUsers = new Integer(0);
         userIdentifierCount = new Integer(0);
         this.hubID = hubID;
@@ -64,7 +65,12 @@ public class MessageHub
     private void broadcast(String message){
         // CRITICAL START
         for (ClientHandler ch : userList){
-            ch.dataOS.writeChars(message);
+            try {
+                ch.dataOS.write(message.getBytes());
+            }
+            catch (IOException e){
+                // do nothing
+            }
         }
         // CRITICAL END
     }

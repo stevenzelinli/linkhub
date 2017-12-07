@@ -2,8 +2,6 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 
-
-
 public class ClientManager {
 	
     private Socket sock;							// connection to the server
@@ -17,7 +15,7 @@ public class ClientManager {
 	}
 	
 	
-	public cientManager() throws IOException {
+	public ClientManager() throws IOException {
 	// Open the socket and then the writer and reader
 		System.out.println("connecting...");
 		sock = new Socket("localhost", 1234);
@@ -59,79 +57,20 @@ public class ClientManager {
 			}
 		}	
 	}
-	
-	
+
+
 	/**
-	 * Get console input and send it to server; 
+	 * Get console input and send it to server;
 	 * stop & clean up when server has hung up (noted by hungup)
 	 */
 	public void handleUser() throws IOException {
-		while (!hungup) {
-			out.println(console.nextLine());
-		}
-
-		// Clean up
-		out.close();
-		in.close();
-		sock.close();
+//		while (!hungup) {
+//			out.println(console.nextLine());
+//		}
+//
+//		// Clean up
+//		out.close();
+//		in.close();
+//		sock.close();
 	}
-	
-	
-	
-	
-	
-	
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////
-/**
-* Examples of using background task java 8
-*/
-
-
-/* VERSION 1
-public static void main(String[] args) {
-
-     Runnable r = new Runnable() {
-         public void run() {
-             runYourBackgroundTaskHere();
-         }
-     };
-
-     new Thread(r).start();
-     //this line will execute immediately, not waiting for your task to complete
-}
-/*
-
-
-
-/* VERSION 2
-    public static void main(String[] args) {
-            System.out.println("Main thread");
-            new Thread(this::myBackgroundTask).start();
-        }
-    
-        private void myBackgroundTask() {
-            System.out.println("Inner Thread");
-        }
-/*
-////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////
