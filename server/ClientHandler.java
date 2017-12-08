@@ -33,27 +33,31 @@ public class ClientHandler implements Runnable {
                 // getting username
                 // first message from client will be the client username
                 username = dataIS.readLine();
+                System.out.println("USER ENTERED NAME");
                 // second message is the hub id
                 String hubID = dataIS.readLine();
+                System.out.println("USER ENTERED HUB ID");
                 if(chatRooms.containsKey(hubID)){
                     currentChatRoom = chatRooms.get(hubID);
                     if(currentChatRoom.checkUsername(username)){
+                        System.out.println("SUCCESS");
                         dataOS.println("SUCCESS"); // messages for client to parse
                         break;
                     }
                     else{
+                        System.out.println("NOT UNIQUE");
                         dataOS.println("NOT UNIQUE"); // messages for client to parse
                     }
                 }
                 else{
-                    dataOS.println("NOT A ROOM"); // messages for client to parse
+                    System.out.println("NOT A HUB");
+                    dataOS.println("NOT A HUB"); // messages for client to parse
                 }
             }
             // Chat away
             String line;
             while ((line = dataIS.readLine()) != null) {
                 String msg = username + ": " + line;
-                //TODO
                 //  ADD POST() METHOD
                 currentChatRoom.postMessage(msg);
             }

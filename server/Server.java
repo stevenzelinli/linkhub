@@ -12,11 +12,12 @@ public class Server
     // counter to keep track of the number of clients
     static int numOfClients = 0;
     static int clientNumber = 0;
+    static int port = 1234;
     
     public static void main(String[] args) throws IOException 
     {
         // server is listening on port 1234
-        ServerSocket server_socket = new ServerSocket(1234);
+        ServerSocket server_socket = new ServerSocket(port);
          
         Socket socket;
 
@@ -24,7 +25,7 @@ public class Server
         // client request
         while (true) 
         {
-            
+            System.out.println("Server Listening on port : " + port);
             // Accept the incoming request
             try
             {
