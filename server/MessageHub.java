@@ -19,19 +19,18 @@ public class MessageHub
         userList.add(creator);
         // Instantiate Message List
         messageList = new Vector<String>();
+        System.out.println(hubID + "Created");
     }
     
     /**
      * Handles user joining hub. Returns corresponding user ID.
      * */
-    public int userJoin(ClientHandler joining){
+    public void userJoin(ClientHandler joining){
         // CRITICAL START
         userList.add(joining);
         numOfUsers++;
-        int temp_id = userIdentifierCount++;
         // CRITICAL END
         loadMessages(10, joining);
-        return temp_id;
     }
     /**
      * Handles user leaving hub
@@ -41,48 +40,55 @@ public class MessageHub
          userList.remove(leaving);
          numOfUsers--;
          // CRITICAL END
-         broadcast("User #" + leaving.userID() + " has left the room");
+         // Done
+         System.out.println(leaving.getUsername() + " hung up from hub: " + hubID);
+         broadcast("User #" + leaving.getUsername() + " has left the room");
          return true; 
      } 
     /**
      * Adds message to messageList passing userID and message to form a message
      * of format: "userID: message"
      **/
-    public void postMessage(int userID, String message){
-        StringBuilder sb = new StringBuilder();
-        sb.append(userID);
-        sb.append(": ");
-        sb.append(message);
+    public void postMessage(String message){
         // CRITICAL START
-        messageList.add(sb.toString());
+        messageList.add(message);
+        System.out.println("Message Received in hub ["+ hubID+"] || " + message);
         // CRITICAL END
+    }
+
+    /**
+     * Check for duplicate username in hub.
+     * @return
+     */
+    public boolean checkUsername(String username){
+        for(ClientHandler ch : userList){
+            if(ch.getUsername() == username){
+                return false; // duplicate username
+            }
+        }
+        return true; // username is fine
     }
     
     /**
-     * Sends a message to each client (in userList) IO stream that is in the
+     * Sends a message to each client's (in userList) output stream that is in the
      * current hub.
      **/
     private void broadcast(String message){
         // CRITICAL START
-        for (ClientHandler ch : userList){
-            try {
-                ch.dataOS.write(message.getBytes());
-            }
-            catch (IOException e){
-                // do nothing
-            }
+        for (ClientHandler ch : userList) {
+            ch.dataOS.println(message);
         }
         // CRITICAL END
     }
     
     /**
-     * Sends messages to client, howFarBack indicates how many previous messages
+     * Sends previous messages to client, howFarBack indicates how many previous messages
      * should be sent.
      **/
     private void loadMessages(int howFarBack, ClientHandler client){
         // CRITICAL START
         for(int i = messageList.size() - howFarBack; i < messageList.size(); i++){
-            // load messages
+            client.dataOS.println(messageList.get(i)); // load stored messages for given hub
         }
         // CRITICAL END
     }

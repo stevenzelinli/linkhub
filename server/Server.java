@@ -15,11 +15,11 @@ public class Server
     
     public static void main(String[] args) throws IOException 
     {
-        // server is listening on port 1243
+        // server is listening on port 1234
         ServerSocket server_socket = new ServerSocket(1234);
          
         Socket socket;
-         
+
         // running infinite loop for getting
         // client request
         while (true) 
@@ -39,16 +39,12 @@ public class Server
              
              
             System.out.println("Creating a new handler for this client...");
-            
-            BufferedInputStream dataIS = new BufferedInputStream(socket.getInputStream());
-            BufferedOutputStream dataOS = new BufferedOutputStream(socket.getOutputStream());
-            
+
             // Create a new handler object for handling this request.
-            ClientHandler clientHandler = new ClientHandler(socket, messageHubs, dataIS, dataOS);
+            ClientHandler clientHandler = new ClientHandler(socket, messageHubs);
  
             // Create a new Thread with this object.
             Thread clientThread = new Thread(clientHandler);
-             
             System.out.println("Adding this client to active client list");
  
             // add this client to active clients list

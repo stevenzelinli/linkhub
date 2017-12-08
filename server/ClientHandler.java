@@ -3,45 +3,74 @@ import java.util.*;
 import java.net.*;
 
 public class ClientHandler implements Runnable {
-    public BufferedInputStream dataIS;
-    public BufferedOutputStream dataOS;
+    public BufferedReader dataIS;
+    public PrintWriter dataOS;
 
-    private int userID;
+    private String username;
     private Socket clientSocket;
     private Map<String, MessageHub> chatRooms;
-    private String currentChatRoom;
+    private MessageHub currentChatRoom;
 
-    public ClientHandler(Socket sock, Map<String, MessageHub> chatRooms, BufferedInputStream in, BufferedOutputStream out) {
+    public ClientHandler(Socket sock, Map<String, MessageHub> chatRooms) {
         this.clientSocket = sock;
-        this.dataIS = in;
-        this.dataOS = out;
+        try {
+            dataIS = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            dataOS = new PrintWriter(sock.getOutputStream(), true);
+        } catch (IOException e) {
+            System.out.print(e.getStackTrace());
+        }
+
         this.chatRooms = chatRooms;
-        this.userID = 0;
+        this.username = "not_set";
     }
 
     @Override
     public void run() {
 
-//        try {
-//            // Chat away
-//            String line;
-//            while ((line = dataIS.read()) != null) {
-//                String msg = "Message: " + line;
-//                System.out.println(msg);
-//                //TODO
-//                //  ADD POST() METHOD
-//                //	server.broadcast(this, msg);
-//            }
-//
-//
-//        }
-//        catch (IOException e){
-//
-//        }
+        try {
+            // verification loop
+            while(true) {
+                // getting username
+                // first message from client will be the client username
+                username = dataIS.readLine();
+                // second message is the hub id
+                String hubID = dataIS.readLine();
+                if(chatRooms.containsKey(hubID)){
+                    currentChatRoom = chatRooms.get(hubID);
+                    if(currentChatRoom.checkUsername(username)){
+                        dataOS.println("SUCCESS"); // messages for client to parse
+                        break;
+                    }
+                    else{
+                        dataOS.println("NOT UNIQUE"); // messages for client to parse
+                    }
+                }
+                else{
+                    dataOS.println("NOT A ROOM"); // messages for client to parse
+                }
+            }
+            // Chat away
+            String line;
+            while ((line = dataIS.readLine()) != null) {
+                String msg = username + ": " + line;
+                //TODO
+                //  ADD POST() METHOD
+                currentChatRoom.postMessage(msg);
+            }
+
+            // User Exits
+            currentChatRoom.userLeft(this);
+            // cleanup
+            dataOS.close();
+            dataIS.close();
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public int userID() {
-        return this.userID;
+    public String getUsername() {
+        return this.username;
     }
 
     /**
@@ -62,9 +91,7 @@ public class ClientHandler implements Runnable {
     private boolean createHub(String hubID) {
         if (chatRooms.containsKey(hubID)) {
             return false;
-        }
-        
-        else{
+        } else {
             MessageHub newHub = new MessageHub(hubID, this); //create hub
             chatRooms.put(hubID, newHub);     //add it to the Map of hubs
             joinHub(hubID);

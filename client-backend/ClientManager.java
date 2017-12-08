@@ -3,7 +3,7 @@ import java.util.*;
 import java.net.*;
 
 public class ClientManager {
-	
+	private Scanner console;
     private Socket sock;							// connection to the server
 	private PrintWriter out;						// Send messages to server
 	private BufferedReader in;						// Receive messages from server
@@ -22,7 +22,7 @@ public class ClientManager {
 		out = new PrintWriter(sock.getOutputStream(), true);
 		in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 		System.out.println("...connected");
-		
+		console = new Scanner(System.in); //get user input to send to server
 		this.messageQueue = new ArrayList<String>();
 		// Fire off a new thread to handle incoming messages from server
 		ServerHandler incoming = new ServerHandler(in);
@@ -64,13 +64,13 @@ public class ClientManager {
 	 * stop & clean up when server has hung up (noted by hungup)
 	 */
 	public void handleUser() throws IOException {
-//		while (!hungup) {
-//			out.println(console.nextLine());
-//		}
-//
-//		// Clean up
-//		out.close();
-//		in.close();
-//		sock.close();
+		while (!hungup) {
+			out.println(console.nextLine());
+		}
+
+		// Clean up
+		out.close();
+		in.close();
+		sock.close();
 	}
 }
