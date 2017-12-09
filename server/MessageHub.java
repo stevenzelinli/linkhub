@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.*;
 import java.lang.StringBuilder;
+import java.util.concurrent.Semaphore;
 
 public class MessageHub
 {
@@ -9,36 +10,51 @@ public class MessageHub
     private Integer numOfUsers;
     private Integer userIdentifierCount;
     private String hubID;
+    private Semaphore gatekeep, posting;
         
-    public MessageHub(String hubID, ClientHandler creator){
+    public MessageHub(String hubID){
         numOfUsers = new Integer(0);
         userIdentifierCount = new Integer(0);
         this.hubID = hubID;
         // Instantiate User List
         userList = new Vector<ClientHandler>();
-        userList.add(creator);
         // Instantiate Message List
         messageList = new Vector<String>();
-        System.out.println(hubID + "Created");
+        System.out.println(hubID + " Created");
+        gatekeep = new Semaphore(1, true);
+        posting = new Semaphore(1, true);
     }
     
     /**
      * Handles user joining hub. Returns corresponding user ID.
      * */
-    public void userJoin(ClientHandler joining){
+    public MessageHub userJoin(ClientHandler joining){
         // CRITICAL START
-        userList.add(joining);
-        numOfUsers++;
+        try {
+            gatekeep.acquire();
+            userList.add(joining);
+            numOfUsers++;
+            gatekeep.release();
+        }
+        catch(InterruptedException e){
+        }
         // CRITICAL END
-        loadMessages(10, joining);
+        //loadMessages(10, joining);
+        return this;
     }
     /**
      * Handles user leaving hub
      **/
      public boolean userLeft(ClientHandler leaving){
          // CRITICAL START
-         userList.remove(leaving);
-         numOfUsers--;
+         try {
+             gatekeep.acquire();
+             userList.remove(leaving);
+             numOfUsers--;
+             gatekeep.release();
+         }
+         catch(InterruptedException e){
+         }
          // CRITICAL END
          // Done
          System.out.println(leaving.getUsername() + " hung up from hub: " + hubID);
@@ -51,8 +67,15 @@ public class MessageHub
      **/
     public void postMessage(String message){
         // CRITICAL START
-        messageList.add(message);
-        System.out.println("Message Received in hub ["+ hubID+"] || " + message);
+        try {
+            posting.acquire();
+            messageList.add(message);
+            System.out.println("Message Received in hub [" + hubID + "] || " + message);
+            broadcast(message);
+            posting.release();
+        }
+        catch(InterruptedException e){
+        }
         // CRITICAL END
     }
 
@@ -61,6 +84,8 @@ public class MessageHub
      * @return
      */
     public boolean checkUsername(String username){
+        if(username.equals("")) return false;
+        if(userList.isEmpty()) return true;
         for(ClientHandler ch : userList){
             if(ch.getUsername() == username){
                 return false; // duplicate username
@@ -74,21 +99,33 @@ public class MessageHub
      * current hub.
      **/
     private void broadcast(String message){
-        // CRITICAL START
         for (ClientHandler ch : userList) {
             ch.dataOS.println(message);
         }
-        // CRITICAL END
     }
     
     /**
      * Sends previous messages to client, howFarBack indicates how many previous messages
      * should be sent.
      **/
-    private void loadMessages(int howFarBack, ClientHandler client){
+    public void loadMessages(int howFarBack, ClientHandler client){
         // CRITICAL START
-        for(int i = messageList.size() - howFarBack; i < messageList.size(); i++){
-            client.dataOS.println(messageList.get(i)); // load stored messages for given hub
+        try {
+            if (messageList.size() < howFarBack) {
+                if (messageList.isEmpty()) return;
+                posting.acquire();
+                for (int i = 0; i < messageList.size(); i++) {
+                    client.dataOS.println(messageList.get(i)); // load stored messages for given hub
+                }
+            } else {
+                posting.acquire();
+                for (int i = messageList.size() - howFarBack; i < messageList.size(); i++) {
+                    client.dataOS.println(messageList.get(i)); // load stored messages for given hub
+                }
+            }
+            posting.release();
+        }
+        catch(InterruptedException e){
         }
         // CRITICAL END
     }

@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
+import java.util.concurrent.Semaphore;
 
 // Server class
 public class Server 
@@ -21,6 +22,8 @@ public class Server
          
         Socket socket;
 
+        // SEMAPHORE FOR HUB CREATION
+        Semaphore creation = new Semaphore(1, true);
         // running infinite loop for getting
         // client request
         while (true) 
@@ -42,7 +45,7 @@ public class Server
             System.out.println("Creating a new handler for this client...");
 
             // Create a new handler object for handling this request.
-            ClientHandler clientHandler = new ClientHandler(socket, messageHubs);
+            ClientHandler clientHandler = new ClientHandler(socket, messageHubs, creation);
  
             // Create a new Thread with this object.
             Thread clientThread = new Thread(clientHandler);

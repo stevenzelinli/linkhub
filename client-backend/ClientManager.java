@@ -11,7 +11,7 @@ public class ClientManager {
 	private ArrayList<String> messageQueue;
 	
 	public static void main(String[] args) throws IOException {
-		new ClientManager().handleUser();
+		new ClientManager();
 	}
 	
 	
@@ -32,6 +32,8 @@ public class ClientManager {
 		ServerHandler incoming = new ServerHandler(in);
 		incoming.setDaemon(true);
 		incoming.start();
+
+        handleUser();
 	}
 	
 	
@@ -84,6 +86,10 @@ public class ClientManager {
 	private void authenticate() throws IOException{
 	    boolean authenticated = false;
 	    while(!authenticated) {
+	        System.out.print("Do you want to create a hub? (Y/N): ");
+	        String createOrJoin = console.nextLine();
+            if(!createOrJoin.toUpperCase().equals("Y") && !createOrJoin.toUpperCase().equals("N")) continue;
+	        out.println(createOrJoin);
             // get username
             System.out.print("Username: ");
             out.println(console.nextLine());
@@ -104,6 +110,15 @@ public class ClientManager {
                 }
                 else if(response.equals("NOT A HUB")){
                     System.out.println("HUB DOES NOT EXIST");
+                }
+                else if(response.equals("BLANK")){
+                    System.out.println("BLANK FIELDS");
+                }
+                else if(response.equals("HUBID TAKEN")){
+                    System.out.println("HUB ID ALREADY EXISTS");
+                }
+                else if(response.equals("USER TAKEN")){
+                    System.out.println("USERNAME TAKEN IN HUB");
                 }
             }
             catch(IOException e){
