@@ -19,13 +19,14 @@ public class Server
     {
         // server is listening on port 1234
         ServerSocket server_socket = new ServerSocket(port);
-         
+        
+        // client socket
         Socket socket;
 
-        // SEMAPHORE FOR HUB CREATION
+        // SEMAPHORE FOR HUB CREATION (MUTEX)
         Semaphore creation = new Semaphore(1, true);
-        // running infinite loop for getting
-        // client request
+        
+        // running infinite loop for getting client request
         while (true) 
         {
             System.out.println("Server Listening on port : " + port);

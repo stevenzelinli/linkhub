@@ -3,21 +3,33 @@ import java.util.*;
 import java.net.*;
 import java.util.concurrent.Semaphore;
 
+/**
+ * Handles client requests and sends back responses based on certain criteria
+ * met. Authenticates client through username, hubid, and creation input from
+ * the client. 
+ */
 public class ClientHandler implements Runnable {
-    public BufferedReader dataIS;
-    public PrintWriter dataOS;
+    private BufferedReader dataIS;
+    private PrintWriter dataOS;
     private Semaphore creation;
     private String username;
     private Socket clientSocket;
     private Map<String, MessageHub> chatRooms;
     private MessageHub currentChatRoom;
-
+    
+    /**
+     * Recieves sockets from Server.java instance which assigns sockets and 
+     * handles the creation of client handlers. Gets passed a semaphore that
+     * will synchronize the creation of MessageHubs and a Map containing all
+     * MessageHub objects mapped to their corresponding hubIDs.
+     */
     public ClientHandler(Socket sock, Map<String, MessageHub> chatRooms, Semaphore creation) {
         this.clientSocket = sock;
         try {
             dataIS = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             dataOS = new PrintWriter(sock.getOutputStream(), true);
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
             System.out.print(e.getStackTrace());
         }
         this.creation = creation;
@@ -27,78 +39,60 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-
         try {
-            // verification loop
-            while(true) {
-                // getting username
-                // first message from client will be the client username
-                String createOrJoin = "L";
-                createOrJoin = dataIS.readLine();
-                if(!createOrJoin.toUpperCase().equals("Y") && !createOrJoin.toUpperCase().equals("N")){
-                    continue;
-                }
-
-                username = dataIS.readLine();
-                //System.out.println("USER ENTERED NAME");
-                // second message is the hub id
-                String hubID = dataIS.readLine();
-
-                // check for blank and make a hub if the user decides to
-                if(hubID.equals("") || username.equals("")){
-                    dataOS.println("BLANK");
-                    continue;
-                }
-                else if(createOrJoin.toUpperCase().equals("Y")){
-                    if(!createHub(hubID)){
-                        dataOS.println("HUBID TAKEN");
-                        continue;
-                    }
-                }
-                //System.out.println("USER ENTERED HUB ID");
-                if(chatRooms.containsKey(hubID)){
-                    currentChatRoom = joinHub(hubID);
-                    if(currentChatRoom.checkUsername(username)){
-                        //System.out.println("SUCCESS");
-                        currentChatRoom.userJoin(this);
-                        dataOS.println("SUCCESS"); // messages for client to parse
-                        break;
-                    }
-                    else if(username.equals("")){
-                        dataOS.println("BLANK");
-                    }
-                    else{
-                        //System.out.println("NOT UNIQUE");
-                        dataOS.println("USER TAKEN"); // messages for client to parse
-                    }
-                }
-                else{
-                    //System.out.println("NOT A HUB");
-                    dataOS.println("NOT A HUB"); // messages for client to parse
-                }
-            }
+            // verification will loop until a set of join/create inputs is accepted
+            verification();
             // LOAD MESSAGES
             currentChatRoom.loadMessages(10, this);
-            // Chat away
+            // Chatting
+            // reading input from client
             String line;
             while ((line = dataIS.readLine()) != null) {
+                // if the user decides to quit
+                if(line.equals("/q")){
+                    // User Exits
+                    break;
+                }
                 String msg = username + ": " + line;
                 //  ADD POST() METHOD
                 currentChatRoom.postMessage(msg);
             }
-            // User Exits
-            currentChatRoom.userLeft(this);
+            leaveHub();
+        } 
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Prints to the output stream associated with this client.
+     */
+    public void printToOutput(String message){
+        dataOS.println(message);
+    }
+    
+    /**
+     * Gets the username associated with the current client handler.
+     */
+    public String getUsername() {
+        return this.username;
+    }
+    
+    /**
+     * Leaves and closes streams and sockets.
+     */
+    private void leaveHub(){
+        // User Exits
+        currentChatRoom.userLeft(this);
+        try{
             // cleanup
             dataOS.close();
             dataIS.close();
             clientSocket.close();
-        } catch (IOException e) {
+        }
+        catch(IOException e){
             e.printStackTrace();
         }
-    }
-
-    public String getUsername() {
-        return this.username;
     }
 
     /**
@@ -124,7 +118,7 @@ public class ClientHandler implements Runnable {
                 creation.release();
                 return false;
             } else {
-                MessageHub newHub = new MessageHub(hubID); //create hub
+                MessageHub newHub = new MessageHub(hubID, chatRooms); //create hub
                 chatRooms.put(hubID, newHub);     //add it to the Map of hubs
                 creation.release();
                 //currentChatRoom = joinHub(hubID);
@@ -136,5 +130,59 @@ public class ClientHandler implements Runnable {
         }
         //CRITICAL END
     }
+    
+    /**
+     * Verification loop to verify client inputs for username and hubID based on
+     * whether or not they are creating or joining a hub.
+     */ 
+    private void verification() throws IOException{
+        // verification loop
+        while(true) {
+            // getting username
+            // first message from client will be the client username
+            String createOrJoin = "L";
+            createOrJoin = dataIS.readLine();
+            if(!createOrJoin.toUpperCase().equals("Y") && !createOrJoin.toUpperCase().equals("N")){
+                continue;
+            }
 
+            username = dataIS.readLine();
+            //System.out.println("USER ENTERED NAME");
+            // second message is the hub id
+            String hubID = dataIS.readLine();
+
+            // check for blank and make a hub if the user decides to
+            if(hubID.equals("") || username.equals("")){
+                dataOS.println("BLANK");
+                continue;
+            }
+            else if(createOrJoin.toUpperCase().equals("Y")){
+                if(!createHub(hubID)){
+                    dataOS.println("HUBID TAKEN");
+                    continue;
+                }
+            }
+            //System.out.println("USER ENTERED HUB ID");
+            if(chatRooms.containsKey(hubID)){
+                currentChatRoom = joinHub(hubID);
+                if(currentChatRoom.checkUsername(username)){
+                    //System.out.println("SUCCESS");
+                    currentChatRoom.userJoin(this);
+                    dataOS.println("SUCCESS"); // messages for client to parse
+                    break;
+                }
+                else if(username.equals("")){
+                    dataOS.println("BLANK");
+                }
+                else{
+                    //System.out.println("NOT UNIQUE");
+                    dataOS.println("USER TAKEN"); // messages for client to parse
+                }
+            }
+            else{
+                //System.out.println("NOT A HUB");
+                dataOS.println("NOT A HUB"); // messages for client to parse
+            }
+        }
+    }
 }

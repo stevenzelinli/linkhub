@@ -10,6 +10,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import linkhub.panels.*;
+import linkhub.backend.*;
 
 public class LinkHub extends JFrame {
 
@@ -21,6 +22,7 @@ public class LinkHub extends JFrame {
   private String username;
   private String hubID;
   private Hub hub;
+  private ClientManager clientManager;
 
   LinkHub() {
 
@@ -45,16 +47,34 @@ public class LinkHub extends JFrame {
     return cardPanel;
   }
 
-  public void loginUser(Hub newHub, String username, String hubID) {
+  public String joinHub(Hub newHub, String username, String hubID) {
+    clientManager = new ClientManager(LinkHub.this);
+    String error = clientManager.joinHub(hubID, username);
+    
+    if(error != null) {
+      return error;
+    }
+    
     this.hub = newHub;
     this.username = username;
     this.hubID = hubID;
+    
+    return null;
   }
 
-  public void createHub(Hub newHub, String username, String hubID) {
+  public String createHub(Hub newHub, String username, String hubID) {
+    clientManager = new ClientManager(LinkHub.this);
+    String error = clientManager.createHub(hubID, username);
+    
+    if(error != null) {
+      return error;
+    }
+    
     this.hub = newHub;
     this.username = username;
     this.hubID = hubID;
+    
+    return null;
   }
 
   public String getHubID() {
@@ -66,17 +86,19 @@ public class LinkHub extends JFrame {
   }
   
   public void sendMessage(String message) {
-    
+    clientManager.postMessage(message);
   }
   
   public void receiveMessage(String message) {
-    this.hub.addMessage(message);
+    System.out.print(message);
+    //this.hub.addMessage(message);
   }
   
   public void exitHub() {
     this.username = null;
     this.hubID = null;
     this.hub = null;
+    clientManager.leaveHub();
   }
 
 }

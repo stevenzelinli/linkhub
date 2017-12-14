@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import linkhub.LinkHub;
@@ -32,10 +33,14 @@ public class Home extends JPanel {
         Hub hubPanel = new Hub(username, hubID, d);
         cards.add(hubPanel, "Hub");
 
-        frame.loginUser(hubPanel, username, hubID);
-
-        CardLayout cardLayout = (CardLayout) cards.getLayout();
-        cardLayout.show(cards, "Hub");
+        String error = frame.joinHub(hubPanel, username, hubID);
+        
+        if(error != null) {
+          JOptionPane.showMessageDialog(Home.this,error);
+        } else {
+          CardLayout cardLayout = (CardLayout) cards.getLayout();
+          cardLayout.show(cards, "Hub");
+        }
     }
   }
 
@@ -55,10 +60,14 @@ public class Home extends JPanel {
         Hub hubPanel = new Hub(username, hubID, d);
         cards.add(hubPanel, "Hub");
 
-        frame.createHub(hubPanel, username, hubID);
-
-        CardLayout cardLayout = (CardLayout) cards.getLayout();
-        cardLayout.show(cards, "Hub");
+        String error = frame.createHub(hubPanel, username, hubID);
+        
+        if(error != null) {
+          JOptionPane.showMessageDialog(Home.this,error);
+        } else {
+          CardLayout cardLayout = (CardLayout) cards.getLayout();
+          cardLayout.show(cards, "Hub");
+        }
     }
   }
 

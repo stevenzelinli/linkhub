@@ -3,16 +3,27 @@ import java.util.*;
 import java.lang.StringBuilder;
 import java.util.concurrent.Semaphore;
 
+/**
+ * Stores all messages and broadcasts to all clients for each message sent.
+ * Has a circular dependency with ClientHandler.
+ */
 public class MessageHub
 {
+    private Map<String, MessageHub> chatRooms;
     private Vector<ClientHandler> userList;
     private Vector<String> messageList;
     private Integer numOfUsers;
     private Integer userIdentifierCount;
     private String hubID;
+    /**
+     * The gatekeep semaphore handles users leaving and entering the chatRoom
+     */
     private Semaphore gatekeep, posting;
-        
-    public MessageHub(String hubID){
+    
+    /**
+     * Gets passed a unique hubID and a map of all chat rooms (for self removal)
+     */
+    public MessageHub(String hubID, Map<String, MessageHub> chatRooms){
         numOfUsers = new Integer(0);
         userIdentifierCount = new Integer(0);
         this.hubID = hubID;
@@ -23,13 +34,13 @@ public class MessageHub
         System.out.println(hubID + " Created");
         gatekeep = new Semaphore(1, true);
         posting = new Semaphore(1, true);
+        this.chatRooms = chatRooms;
     }
     
     /**
-     * Handles user joining hub. Returns corresponding user ID.
+     * Handles user joining hub.
      * */
     public MessageHub userJoin(ClientHandler joining){
-        // CRITICAL START
         try {
             gatekeep.acquire();
             userList.add(joining);
@@ -38,29 +49,34 @@ public class MessageHub
         }
         catch(InterruptedException e){
         }
-        // CRITICAL END
-        //loadMessages(10, joining);
         return this;
     }
+    
     /**
-     * Handles user leaving hub
+     * Handles user leaving hub. Removes them from the userList and terminates their session.
      **/
-     public boolean userLeft(ClientHandler leaving){
-         // CRITICAL START
-         try {
-             gatekeep.acquire();
-             userList.remove(leaving);
-             numOfUsers--;
-             gatekeep.release();
-         }
-         catch(InterruptedException e){
-         }
-         // CRITICAL END
-         // Done
-         System.out.println(leaving.getUsername() + " hung up from hub: " + hubID);
-         broadcast("User #" + leaving.getUsername() + " has left the room");
-         return true; 
-     } 
+    public boolean userLeft(ClientHandler leaving){
+        try {
+            gatekeep.acquire();
+            userList.remove(leaving);
+            numOfUsers--;
+            // If there are no users after the user leaves then the room is "destroyed"
+            if(numOfUsers == 0){
+                chatRooms.remove(hubID);
+                System.out.println("NO USERS LEFT IN CHATROOM ["+hubID+"], HUB DESTROYED");
+                gatekeep.release();
+                return true;
+            }
+            System.out.println(leaving.getUsername() + " hung up from hub: " + hubID);
+            broadcast("User " + leaving.getUsername() + " has left the room");
+            gatekeep.release();
+            return true; 
+        }
+        catch(InterruptedException e){
+            return false;
+        }
+    }
+    
     /**
      * Adds message to messageList passing userID and message to form a message
      * of format: "userID: message"
@@ -81,7 +97,6 @@ public class MessageHub
 
     /**
      * Check for duplicate username in hub.
-     * @return
      */
     public boolean checkUsername(String username){
         if(username.equals("")) return false;
@@ -100,7 +115,7 @@ public class MessageHub
      **/
     private void broadcast(String message){
         for (ClientHandler ch : userList) {
-            ch.dataOS.println(message);
+            ch.printToOutput(message);
         }
     }
     
@@ -109,24 +124,23 @@ public class MessageHub
      * should be sent.
      **/
     public void loadMessages(int howFarBack, ClientHandler client){
-        // CRITICAL START
         try {
             if (messageList.size() < howFarBack) {
                 if (messageList.isEmpty()) return;
                 posting.acquire();
                 for (int i = 0; i < messageList.size(); i++) {
-                    client.dataOS.println(messageList.get(i)); // load stored messages for given hub
+                    client.printToOutput(messageList.get(i)); // load stored messages for given hub
                 }
-            } else {
+            } 
+            else {
                 posting.acquire();
                 for (int i = messageList.size() - howFarBack; i < messageList.size(); i++) {
-                    client.dataOS.println(messageList.get(i)); // load stored messages for given hub
+                    client.printToOutput(messageList.get(i)); // load stored messages for given hub
                 }
             }
             posting.release();
         }
         catch(InterruptedException e){
         }
-        // CRITICAL END
     }
 }
