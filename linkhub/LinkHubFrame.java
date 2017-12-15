@@ -19,7 +19,7 @@ public class LinkHubFrame extends JFrame implements Observer {
   public Home homePanel;
   
   public String server = "localhost";
-  public int port = 1234;
+  public int port = 8081;
   
   private LinkHubAccess linkHubAccess;
     
@@ -116,6 +116,23 @@ public class LinkHubFrame extends JFrame implements Observer {
         cardPanel.add(this.hub, "Hub");
         CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
         cardLayout.show(cardPanel, "Hub");
+      } else if(finalArg.toString().equals("SERVER HUNGUP")){
+        try{
+          CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
+          SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+              if(LinkHubFrame.this.hub != null) {
+                LinkHubFrame.this.hub.addMessage("SERVER HUNGUP");
+              }
+            }
+        });
+          Thread.sleep(2000);
+          exitHub();
+          cardLayout.show(cardPanel, "Home");
+        }
+        catch(InterruptedException e){
+          e.printStackTrace();
+        }
       } else {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {

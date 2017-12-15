@@ -8,13 +8,13 @@ import java.util.concurrent.Semaphore;
 public class Server 
 {
     // Vector to store active clients
-    static Vector<ClientHandler> activeClients = new Vector<>();
+    //static Vector<ClientHandler> activeClients = new Vector<>();
     // Map to store hubs
     static Map<String, MessageHub> messageHubs = new HashMap<String, MessageHub>();
     // counter to keep track of the number of clients
     static int numOfClients = 0;
     static int clientNumber = 0;
-    static int port = 1234;
+    static int port = 8081;
     
     public static void main(String[] args) throws IOException 
     {
@@ -54,7 +54,7 @@ public class Server
             System.out.println("Adding this client to active client list");
  
             // add this client to active clients list
-            activeClients.add(clientHandler);
+            //activeClients.add(clientHandler);
  
             // start the thread.
             clientThread.start();

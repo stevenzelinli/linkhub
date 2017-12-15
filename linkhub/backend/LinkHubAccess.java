@@ -33,11 +33,13 @@ public class LinkHubAccess extends Observable {
                         String line;
                         while ((line = reader.readLine()) != null)
                             notifyObservers(line);
+                        notifyObservers("SERVER HUNGUP");
                     } catch (IOException ex) {
-                        notifyObservers(ex);
+                        
                     }
                 }
             };
+            receivingThread.setDaemon(true);
             receivingThread.start();
         }
 
@@ -80,6 +82,7 @@ public class LinkHubAccess extends Observable {
         /** Close the socket */
         public void close() {
             try {
+                outputStream.close();
                 socket.close();
             } catch (IOException ex) {
                 notifyObservers(ex);
