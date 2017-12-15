@@ -13,7 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import linkhub.LinkHub;
+import linkhub.LinkHubFrame;
 
 public class Home extends JPanel {
 
@@ -21,26 +21,14 @@ public class Home extends JPanel {
   {
     public void actionPerformed(ActionEvent e)
     {
-        LinkHub frame = (LinkHub) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
+        LinkHubFrame frame = (LinkHubFrame) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
         JPanel cards = frame.getCards();
         
         String username = Home.this.usernameTextbox.getText();
         String hubID = Home.this.hubID.getText();
         
-        Dimension d = new Dimension();
-        d.width = 500;
-        d.height = 500;
-        Hub hubPanel = new Hub(username, hubID, d);
-        cards.add(hubPanel, "Hub");
-
-        String error = frame.joinHub(hubPanel, username, hubID);
+        frame.joinHub(username, hubID);
         
-        if(error != null) {
-          JOptionPane.showMessageDialog(Home.this,error);
-        } else {
-          CardLayout cardLayout = (CardLayout) cards.getLayout();
-          cardLayout.show(cards, "Hub");
-        }
     }
   }
 
@@ -48,26 +36,13 @@ public class Home extends JPanel {
   {
     public void actionPerformed(ActionEvent e)
     {
-        LinkHub frame = (LinkHub) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
+        LinkHubFrame frame = (LinkHubFrame) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
         JPanel cards = frame.getCards();
         
         String username = Home.this.usernameTextbox.getText();
         String hubID = Home.this.hubID.getText();
-        
-        Dimension d = new Dimension();
-        d.width = 500;
-        d.height = 500;
-        Hub hubPanel = new Hub(username, hubID, d);
-        cards.add(hubPanel, "Hub");
 
-        String error = frame.createHub(hubPanel, username, hubID);
-        
-        if(error != null) {
-          JOptionPane.showMessageDialog(Home.this,error);
-        } else {
-          CardLayout cardLayout = (CardLayout) cards.getLayout();
-          cardLayout.show(cards, "Hub");
-        }
+        frame.createHub(username, hubID);
     }
   }
 

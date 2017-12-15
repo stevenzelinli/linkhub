@@ -15,6 +15,7 @@ public class MessageHub
     private Integer numOfUsers;
     private Integer userIdentifierCount;
     private String hubID;
+    
     /**
      * The gatekeep semaphore handles users leaving and entering the chatRoom
      */
@@ -43,6 +44,7 @@ public class MessageHub
     public MessageHub userJoin(ClientHandler joining){
         try {
             gatekeep.acquire();
+            broadcast("User " + joining.getUsername() + " has joined the hub");
             userList.add(joining);
             numOfUsers++;
             gatekeep.release();
@@ -102,7 +104,7 @@ public class MessageHub
         if(username.equals("")) return false;
         if(userList.isEmpty()) return true;
         for(ClientHandler ch : userList){
-            if(ch.getUsername() == username){
+            if(ch.getUsername().equals(username)){
                 return false; // duplicate username
             }
         }

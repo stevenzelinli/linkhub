@@ -21,7 +21,7 @@ import javax.swing.SwingConstants;
 import java.util.Vector;
 
 
-import linkhub.LinkHub;
+import linkhub.LinkHubFrame;
 
 public class Hub extends JPanel {
 
@@ -29,10 +29,9 @@ public class Hub extends JPanel {
   {
     public void actionPerformed(ActionEvent e)
     {
-      LinkHub frame = (LinkHub) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
+      LinkHubFrame frame = (LinkHubFrame) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
       
-      String message = username + ": " + Hub.this.messageTextbox.getText() + "\n";
-      textArea.append(message);
+      String message = Hub.this.messageTextbox.getText();
       frame.sendMessage(message);
       messageTextbox.setText("");
     }
@@ -42,9 +41,8 @@ public class Hub extends JPanel {
   {
     public void actionPerformed(ActionEvent e)
     {
-      LinkHub frame = (LinkHub) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
+      LinkHubFrame frame = (LinkHubFrame) javax.swing.FocusManager.getCurrentManager().getActiveWindow();
       
-      frame.sendMessage("***" + username + " has left the hub.");
       frame.exitHub();
       
       JPanel cards = frame.getCards();
@@ -135,7 +133,7 @@ public class Hub extends JPanel {
   }
   
   public void addMessage(String message) {
-    messageTextbox.setText(messageTextbox.getText() + message);
+    textArea.append(message);
   }
 
 }

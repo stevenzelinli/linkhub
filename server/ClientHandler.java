@@ -54,7 +54,7 @@ public class ClientHandler implements Runnable {
                     break;
                 }
                 String msg = username + ": " + line;
-                //  ADD POST() METHOD
+                
                 currentChatRoom.postMessage(msg);
             }
             leaveHub();
@@ -147,41 +147,38 @@ public class ClientHandler implements Runnable {
             }
 
             username = dataIS.readLine();
-            //System.out.println("USER ENTERED NAME");
+
             // second message is the hub id
             String hubID = dataIS.readLine();
 
             // check for blank and make a hub if the user decides to
             if(hubID.equals("") || username.equals("")){
-                dataOS.println("BLANK");
+                dataOS.println("ERROR: BLANK");
                 continue;
             }
             else if(createOrJoin.toUpperCase().equals("Y")){
                 if(!createHub(hubID)){
-                    dataOS.println("HUBID TAKEN");
+                    dataOS.println("ERROR: HUBID TAKEN");
                     continue;
                 }
             }
-            //System.out.println("USER ENTERED HUB ID");
+
             if(chatRooms.containsKey(hubID)){
                 currentChatRoom = joinHub(hubID);
                 if(currentChatRoom.checkUsername(username)){
-                    //System.out.println("SUCCESS");
                     currentChatRoom.userJoin(this);
                     dataOS.println("SUCCESS"); // messages for client to parse
                     break;
                 }
                 else if(username.equals("")){
-                    dataOS.println("BLANK");
+                    dataOS.println("ERROR: BLANK");
                 }
                 else{
-                    //System.out.println("NOT UNIQUE");
-                    dataOS.println("USER TAKEN"); // messages for client to parse
+                    dataOS.println("ERROR: USER TAKEN"); // messages for client to parse
                 }
             }
             else{
-                //System.out.println("NOT A HUB");
-                dataOS.println("NOT A HUB"); // messages for client to parse
+                dataOS.println("ERROR: NOT A HUB"); // messages for client to parse
             }
         }
     }

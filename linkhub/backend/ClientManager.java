@@ -5,6 +5,8 @@ import java.util.*;
 import java.net.*;
 import linkhub.LinkHub;
 
+import javax.swing.*;
+
 /**
  * Take note that all reading new messages takes place in a separate thread from
  * the thread which creates the ClientManager. The thread that creates the
@@ -25,7 +27,7 @@ public class ClientManager {
 	/**
 	 * LinkHub object is the frontend class
 	 */
-	public ClientManager(LinkHub gui){
+	public ClientManager(LinkHubAccess gui){
 		try{
 	        // Open the socket and then the writer and reader
 	        System.out.println("Welcome to Linkhub");
@@ -38,9 +40,9 @@ public class ClientManager {
 			this.gui = gui;
 			
 			// Fire off a new thread to handle incoming messages from server
-			ServerHandler incoming = new ServerHandler(in);
-			incoming.setDaemon(true);
-			incoming.start();
+			// ServerHandler incoming = new ServerHandler(in);
+			// incoming.setDaemon(true);
+			// incoming.start();
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -71,6 +73,13 @@ public class ClientManager {
 		finally{
 			return "HANGUP";
 		}
+	}
+	
+	public void startListener(){
+		// Fire off a new thread to handle incoming messages from server
+		ServerHandler incoming = new ServerHandler(in);
+		incoming.setDaemon(true);
+		incoming.start();
 	}
 	
 	/**
@@ -130,7 +139,13 @@ public class ClientManager {
 			try {
 				while ((line = in.readLine()) != null) {
 					// update UI
-					gui.receiveMessage(line);
+                    finalLine = line;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            gui.receiveMessage(finalLine);
+                        }
+                    });
 				}
 			}
 			catch (IOException e) {
@@ -138,24 +153,14 @@ public class ClientManager {
 			}
 			finally {
 				hungup = true;	//if the server disconnected
-				gui.receiveMessage("server hungup");
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        gui.receiveMessage("server hungup");
+                    }
+                });
 				System.out.println("server hung up");
 			}
 		}	
-	}
-
-
-	/**
-	 * Get console input and send it to server;
-	 * stop & clean up when server has hung up (noted by hungup)
-	 */
-	public void handleUser() throws IOException {
-		while (!hungup) {
-			out.println(console.nextLine());
-		}
-		// Clean up
-		out.close();
-		in.close();
-		sock.close();
 	}
 }
